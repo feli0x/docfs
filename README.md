@@ -256,9 +256,70 @@ Add to your MCP client configuration:
 {
   "mcpServers": {
     "docfs": {
-      "command": "pnpm",
-      "args": ["start", "--root", "/path/to/your/files"],
-      "cwd": "/path/to/docfs"
+      "command": "npx",
+      "args": ["docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+## MCP Client Setup
+
+The following examples show how to configure different MCP-compatible clients.
+Each client automatically runs DocFS via `npx` with the provided command and
+arguments—no separate server process is needed.
+
+### ChatGPT
+Add a server entry in ChatGPT's MCP settings pointing to `docfs`:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+### Claude Code
+Configure Claude Code to use DocFS:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+### Claude Desktop
+Add DocFS to Claude Desktop's MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+### Cursor
+Include DocFS in Cursor's MCP config:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["docfs", "--root", "/path/to/project"]
     }
   }
 }
@@ -299,6 +360,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🐛 [Bug Reports](https://github.com/feli0x/docfs/issues)
 - 💡 [Feature Requests](https://github.com/feli0x/docfs/issues)
 - 📖 [Documentation](https://github.com/feli0x/docfs/wiki)
+
+## Local Development (for contributors)
+
+```bash
+pnpm install
+pnpm build
+pnpm start -- --root /path/to/project
+```
 
 ---
 
