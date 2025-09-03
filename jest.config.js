@@ -19,15 +19,14 @@ export default {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  // TODO: Increase test coverage and enable thresholds
-  // coverageThreshold: {
-  //   global: {
-  //     branches: 80,
-  //     functions: 80,
-  //     lines: 80,
-  //     statements: 80,
-  //   },
-  // },
+  coverageThreshold: {
+    global: {
+      branches: 64,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
   verbose: true,
   testTimeout: 10000,
 };
