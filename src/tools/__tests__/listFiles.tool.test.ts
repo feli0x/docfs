@@ -13,7 +13,7 @@ jest.mock('../../utils/filesystem.js', () => ({
 
 import { listFiles as mockListDirectoryFiles } from '../../utils/filesystem.js';
 
-const asMock = <T>(fn: unknown) => fn as jest.MockedFunction<T>;
+const asMock = <T extends (...args: any[]) => any>(fn: unknown) => fn as jest.MockedFunction<T>;
 
 describe('list_files tool', () => {
   const context = { roots: ['/root'] };
@@ -83,4 +83,3 @@ describe('list_files tool', () => {
     expect(text).toContain('📁 /root/sub');
   });
 });
-
