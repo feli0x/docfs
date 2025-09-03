@@ -41,16 +41,15 @@ describe('read_files tool', () => {
 
     const output = await readFilesTool.handler({ path: 'file.ts' }, context);
     const text = output.content[0]?.type === 'text' ? output.content[0].text : '';
+    const data = JSON.parse(text);
 
-    expect(text).toContain('📄 file.ts');
-    expect(text).toContain('Type: typescript');
-    expect(text).toContain('Encoding: utf-8');
-    // Line numbers
-    expect(text).toContain('1| lineA');
-    expect(text).toContain('2| lineB');
+    expect(Array.isArray(data)).toBe(true);
+    expect(data[0].path).toBe('file.ts');
+    expect(data[0].content).toContain('1| lineA');
+    expect(data[0].content).toContain('2| lineB');
   });
 
-  it('honors line range and shows range info', async () => {
+  it('honors line range and shows line numbers', async () => {
     asMock<typeof mockGetFileInfo>(mockGetFileInfo).mockResolvedValueOnce({
       path: '/root/file.md',
       name: 'file.md',
@@ -66,12 +65,11 @@ describe('read_files tool', () => {
       context,
     );
     const text = output.content[0]?.type === 'text' ? output.content[0].text : '';
-    expect(text).toContain('(lines 2-3)');
-    expect(text).toContain('2| b');
-    expect(text).toContain('3| c');
+    const data = JSON.parse(text);
+    expect(data[0].content).toBe('2| b\n3| c');
   });
 
-  it('reports error for files exceeding size limit and summarizes multiple', async () => {
+  it('reports error for files exceeding size limit', async () => {
     // First file OK
     asMock<typeof mockGetFileInfo>(mockGetFileInfo)
       .mockResolvedValueOnce({
@@ -99,10 +97,10 @@ describe('read_files tool', () => {
       context,
     );
     const text = output.content[0]?.type === 'text' ? output.content[0].text : '';
+    const data = JSON.parse(text);
 
-    expect(text).toContain('ok');
-    expect(text).toMatch(/Failed to read .*large\.bin.*File too large/);
-    expect(text).toContain('📊 Summary: 1 files read successfully, 1 errors');
+    expect(data[0].content).toBe('1| ok');
+    expect(data[1].error).toMatch(/File too large/);
   });
 
   it('throws when startLine > endLine', async () => {
