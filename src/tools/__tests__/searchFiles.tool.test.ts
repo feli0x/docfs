@@ -12,7 +12,7 @@ jest.mock('../../utils/filesystem.js', () => ({
 import { searchInFiles as mockSearchInFiles } from '../../utils/filesystem.js';
 import type { SearchResult } from '../../types/index.js';
 
-const asMock = <T>(fn: unknown) => fn as jest.MockedFunction<T>;
+const asMock = <T extends (...args: any[]) => any>(fn: unknown) => fn as jest.MockedFunction<T>;
 
 describe('search_files tool', () => {
   const context = { roots: ['/project'] };
@@ -69,4 +69,3 @@ describe('search_files tool', () => {
     expect(text).toContain('Results limited to 2 matches');
   });
 });
-

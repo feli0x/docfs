@@ -67,6 +67,7 @@ pnpm start
 Creates a visual tree structure of files and directories with metadata.
 
 **Parameters:**
+
 - `pattern` (optional): Glob pattern to filter files (e.g., `"*.js"`, `"*.md"`)
 - `recursive` (optional): Whether to list recursively (default: `true`)
 - `maxDepth` (optional): Maximum directory depth (default: `10`)
@@ -74,6 +75,7 @@ Creates a visual tree structure of files and directories with metadata.
 - `path` (optional): Specific path within roots to list
 
 **Example Output:**
+
 ```
 📁 /Users/felix/project
 ├── 📝 README.md (2.1 KB)
@@ -98,6 +100,7 @@ Creates a visual tree structure of files and directories with metadata.
 Searches for text content within files across the configured directories.
 
 **Parameters:**
+
 - `query` (required): Text to search for
 - `filePattern` (optional): Glob pattern for files to search
 - `caseSensitive` (optional): Case-sensitive search (default: `false`)
@@ -106,13 +109,14 @@ Searches for text content within files across the configured directories.
 - `maxResults` (optional): Maximum results to return (default: `100`, max: `1000`)
 
 **Example Output:**
+
 ```
 🔍 Found 3 matches for "MCP server" in 2 files:
 
 📄 src/index.ts (2 matches)
    Line 45: const server = new Server({
    43:   const allowedRoots = await validateRoots(rootPaths);
-   44:   
+   44:
    45: > const server = new Server({
    46:     name: 'docfs',
    47:     version: '1.0.0',
@@ -130,6 +134,7 @@ Searches for text content within files across the configured directories.
 Reads content from one or more files with optional line range selection.
 
 **Parameters:**
+
 - `path` or `paths` (required): Single file path or array of paths (max 10 files)
 - `startLine` (optional): Starting line number (1-based)
 - `endLine` (optional): Ending line number (1-based)
@@ -138,6 +143,7 @@ Reads content from one or more files with optional line range selection.
 - `maxFileSize` (optional): Max file size in bytes (default: 1MB)
 
 **Example Output:**
+
 ```
 📄 src/index.ts (lines 1-20)
    Size: 3.4 KB
@@ -146,7 +152,7 @@ Reads content from one or more files with optional line range selection.
    Encoding: utf-8
 ────────────────────────────────────────────────────────────────
  1| #!/usr/bin/env node
- 2| 
+ 2|
  3| import { Server } from '@modelcontextprotocol/sdk/server/index.js';
  4| import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
  5| // ... rest of file content
@@ -290,9 +296,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 🐛 [Bug Reports](https://github.com/your-username/docfs/issues)
-- 💡 [Feature Requests](https://github.com/your-username/docfs/issues)
-- 📖 [Documentation](https://github.com/your-username/docfs/wiki)
+- 🐛 [Bug Reports](https://github.com/feli0x/docfs/issues)
+- 💡 [Feature Requests](https://github.com/feli0x/docfs/issues)
+- 📖 [Documentation](https://github.com/feli0x/docfs/wiki)
 
 ---
 

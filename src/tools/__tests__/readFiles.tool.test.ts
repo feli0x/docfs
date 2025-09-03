@@ -17,7 +17,7 @@ import {
   getFileInfo as mockGetFileInfo,
 } from '../../utils/filesystem.js';
 
-const asMock = <T>(fn: unknown) => fn as jest.MockedFunction<T>;
+const asMock = <T extends (...args: any[]) => any>(fn: unknown) => fn as jest.MockedFunction<T>;
 
 describe('read_files tool', () => {
   const context = { roots: ['/root'] };
@@ -59,7 +59,7 @@ describe('read_files tool', () => {
       isDirectory: false,
       extension: 'md',
     } as any);
-    asMock<typeof mockReadFileContent>(mockReadFileContent).mockResolvedValueOnce('a\nb\nc\nd');
+    asMock<typeof mockReadFileContent>(mockReadFileContent).mockResolvedValueOnce('b\nc');
 
     const output = await readFilesTool.handler(
       { path: 'file.md', startLine: 2, endLine: 3, showLineNumbers: true },
@@ -111,4 +111,3 @@ describe('read_files tool', () => {
     ).rejects.toThrow('Start line cannot be greater than end line');
   });
 });
-
