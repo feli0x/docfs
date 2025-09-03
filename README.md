@@ -170,7 +170,7 @@ Add to your MCP client configuration:
   "mcpServers": {
     "docfs": {
       "command": "npx",
-      "args": ["docfs", "--root", "/path/to/project"]
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
     }
   }
 }
@@ -179,10 +179,11 @@ Add to your MCP client configuration:
 ## MCP Client Setup
 
 The following examples show how to configure different MCP-compatible clients.
-Each client automatically runs DocFS via `npx` with the provided command and
-arguments—no separate server process is needed.
+Each client automatically runs DocFS via `npx -y` with the provided command and
+arguments—no separate server process is needed. The `-y` flag ensures `npx` installs packages without prompting.
 
 ### ChatGPT
+
 Add a server entry in ChatGPT's MCP settings pointing to `docfs`:
 
 ```json
@@ -190,13 +191,14 @@ Add a server entry in ChatGPT's MCP settings pointing to `docfs`:
   "mcpServers": {
     "docfs": {
       "command": "npx",
-      "args": ["docfs", "--root", "/path/to/project"]
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
     }
   }
 }
 ```
 
 ### Claude Code
+
 Configure Claude Code to use DocFS:
 
 ```json
@@ -204,13 +206,14 @@ Configure Claude Code to use DocFS:
   "mcpServers": {
     "docfs": {
       "command": "npx",
-      "args": ["docfs", "--root", "/path/to/project"]
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
     }
   }
 }
 ```
 
 ### Claude Desktop
+
 Add DocFS to Claude Desktop's MCP configuration:
 
 ```json
@@ -218,13 +221,14 @@ Add DocFS to Claude Desktop's MCP configuration:
   "mcpServers": {
     "docfs": {
       "command": "npx",
-      "args": ["docfs", "--root", "/path/to/project"]
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
     }
   }
 }
 ```
 
 ### Cursor
+
 Include DocFS in Cursor's MCP config:
 
 ```json
@@ -232,7 +236,7 @@ Include DocFS in Cursor's MCP config:
   "mcpServers": {
     "docfs": {
       "command": "npx",
-      "args": ["docfs", "--root", "/path/to/project"]
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
     }
   }
 }
