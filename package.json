@@ -1,6 +1,6 @@
 {
   "name": "docfs",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "MCP server for accessing local file system content with intelligent search and listing tools",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -44,7 +44,7 @@
     "file-search",
     "code-snippets"
   ],
-  "author": "Felix",
+  "author": "Felix Swinkels",
   "license": "MIT",
   "repository": {
     "type": "git",
