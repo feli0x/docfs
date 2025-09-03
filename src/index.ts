@@ -13,6 +13,8 @@ import {
   type CallToolResult,
 } from '@modelcontextprotocol/sdk/types.js';
 import { resolve } from 'node:path';
+import { homedir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { pathExists } from './utils/filesystem.js';
 import { tools } from './tools/index.js';
 import type { ToolContext } from './types/index.js';
@@ -35,7 +37,10 @@ function parseCliArgs(argv: string[]): string[] {
       if (!rootPath || rootPath.startsWith('-')) {
         throw new Error('--root requires a directory path');
       }
-      roots.push(resolve(rootPath));
+      const expanded = rootPath.startsWith('~')
+        ? rootPath.replace(/^~(?=\/|$)/, homedir())
+        : rootPath;
+      roots.push(resolve(expanded));
       i++; // Skip next argument as it's the root path
     }
   }
@@ -189,7 +194,23 @@ async function main(): Promise<void> {
 }
 
 // Start the server if this module is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isMain: boolean = (() : boolean => {
+  try {
+    // Prefer Node 20+'s import.meta.main when available (Node 20+)
+    const meta = import.meta as unknown as { main?: boolean };
+    if (typeof meta.main === 'boolean') {
+      return meta.main;
+    }
+  } catch {
+    // fall through to path-based check
+  }
+  // Fallback: normalize both paths to avoid npx/global wrapper differences
+  const argv1 = process.argv[1] ? resolve(process.argv[1]) : null;
+  const modulePath = resolve(fileURLToPath(import.meta.url));
+  return argv1 !== null && argv1 === modulePath;
+})();
+
+if (isMain) {
   main().catch((error: unknown) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[FATAL] Unexpected error: ${errorMessage}`);

@@ -127,6 +127,7 @@ function getContentType(filePath: string): string {
     kt: 'kotlin',
     scala: 'scala',
     html: 'html',
+    liquid: 'liquid',
     css: 'css',
     scss: 'scss',
     sass: 'sass',
