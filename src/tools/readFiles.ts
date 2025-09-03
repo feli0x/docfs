@@ -3,7 +3,12 @@
  */
 
 import { relative, isAbsolute, resolve, normalize } from 'node:path';
-import { readFileContent, validatePathAccess, getFileInfo, pathExists } from '../utils/filesystem.js';
+import {
+  readFileContent,
+  validatePathAccess,
+  getFileInfo,
+  pathExists,
+} from '../utils/filesystem.js';
 import type { ToolSpec, ToolContext, ToolResult } from '../types/index.js';
 
 interface ReadFilesInput {
@@ -144,6 +149,33 @@ function getContentType(filePath: string): string {
 }
 
 /**
+ * Resolves a file path against allowed roots and ensures it exists
+ */
+async function resolveFilePath(filePath: string, rootPaths: string[]): Promise<string> {
+  if (isAbsolute(filePath)) {
+    return validatePathAccess(filePath, rootPaths);
+  }
+
+  for (const root of rootPaths) {
+    const candidate = normalize(resolve(root, filePath));
+    try {
+      const withinRoot = validatePathAccess(candidate, [root]);
+      if (await pathExists(withinRoot)) {
+        return withinRoot;
+      }
+    } catch {
+      // Not within this root or does not exist; try next
+      continue;
+    }
+  }
+
+  throw new Error(
+    `Path '${filePath}' not found within allowed roots. ` +
+      `Provide an absolute path or a path relative to one of: ${rootPaths.join(', ')}`,
+  );
+}
+
+/**
  * Reads and formats a single file
  */
 async function readSingleFile(
@@ -151,32 +183,7 @@ async function readSingleFile(
   params: ReadFilesInput,
   rootPaths: string[],
 ): Promise<string> {
-  let validatedPath: string | undefined;
-
-  if (isAbsolute(filePath)) {
-    validatedPath = validatePathAccess(filePath, rootPaths);
-  } else {
-    for (const root of rootPaths) {
-      const candidate = normalize(resolve(root, filePath));
-      try {
-        const withinRoot = validatePathAccess(candidate, [root]);
-        if (await pathExists(withinRoot)) {
-          validatedPath = withinRoot;
-          break;
-        }
-      } catch {
-        // Not within this root or does not exist; try next
-        continue;
-      }
-    }
-
-    if (!validatedPath) {
-      throw new Error(
-        `Path '${filePath}' not found within allowed roots. ` +
-          `Provide an absolute path or a path relative to one of: ${rootPaths.join(', ')}`,
-      );
-    }
-  }
+  const validatedPath = await resolveFilePath(filePath, rootPaths);
 
   // Get file info first
   const fileInfo = await getFileInfo(validatedPath);

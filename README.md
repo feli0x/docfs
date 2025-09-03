@@ -15,51 +15,6 @@ DocFS is a Model Context Protocol (MCP) server that provides intelligent access 
 - **⚡ Performance**: Efficient file operations with configurable limits
 - **🎨 Rich Output**: Formatted output with icons, syntax highlighting hints, and summaries
 
-## 📦 Installation
-
-### Prerequisites
-
-- Node.js 18.x or higher
-- pnpm, npm, or yarn
-
-### Install Dependencies
-
-```bash
-pnpm install
-```
-
-### Build the Project
-
-```bash
-pnpm run build
-```
-
-## 🛠️ Usage
-
-### Basic Usage
-
-Run the server with a specific root directory:
-
-```bash
-pnpm start --root /path/to/your/project
-```
-
-### Multiple Root Directories
-
-You can specify multiple root directories:
-
-```bash
-pnpm start --root /path/to/project1 --root /path/to/project2
-```
-
-### Default Behavior
-
-If no `--root` is specified, the current working directory is used:
-
-```bash
-pnpm start
-```
-
 ## 🔧 Available Tools
 
 ### 1. `list_files` - Directory Listing
@@ -67,6 +22,7 @@ pnpm start
 Creates a visual tree structure of files and directories with metadata.
 
 **Parameters:**
+
 - `pattern` (optional): Glob pattern to filter files (e.g., `"*.js"`, `"*.md"`)
 - `recursive` (optional): Whether to list recursively (default: `true`)
 - `maxDepth` (optional): Maximum directory depth (default: `10`)
@@ -74,6 +30,7 @@ Creates a visual tree structure of files and directories with metadata.
 - `path` (optional): Specific path within roots to list
 
 **Example Output:**
+
 ```
 📁 /Users/felix/project
 ├── 📝 README.md (2.1 KB)
@@ -98,6 +55,7 @@ Creates a visual tree structure of files and directories with metadata.
 Searches for text content within files across the configured directories.
 
 **Parameters:**
+
 - `query` (required): Text to search for
 - `filePattern` (optional): Glob pattern for files to search
 - `caseSensitive` (optional): Case-sensitive search (default: `false`)
@@ -106,13 +64,14 @@ Searches for text content within files across the configured directories.
 - `maxResults` (optional): Maximum results to return (default: `100`, max: `1000`)
 
 **Example Output:**
+
 ```
 🔍 Found 3 matches for "MCP server" in 2 files:
 
 📄 src/index.ts (2 matches)
    Line 45: const server = new Server({
    43:   const allowedRoots = await validateRoots(rootPaths);
-   44:   
+   44:
    45: > const server = new Server({
    46:     name: 'docfs',
    47:     version: '1.0.0',
@@ -130,6 +89,7 @@ Searches for text content within files across the configured directories.
 Reads content from one or more files with optional line range selection.
 
 **Parameters:**
+
 - `path` or `paths` (required): Single file path or array of paths (max 10 files)
 - `startLine` (optional): Starting line number (1-based)
 - `endLine` (optional): Ending line number (1-based)
@@ -138,6 +98,7 @@ Reads content from one or more files with optional line range selection.
 - `maxFileSize` (optional): Max file size in bytes (default: 1MB)
 
 **Example Output:**
+
 ```
 📄 src/index.ts (lines 1-20)
    Size: 3.4 KB
@@ -146,52 +107,10 @@ Reads content from one or more files with optional line range selection.
    Encoding: utf-8
 ────────────────────────────────────────────────────────────────
  1| #!/usr/bin/env node
- 2| 
+ 2|
  3| import { Server } from '@modelcontextprotocol/sdk/server/index.js';
  4| import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
  5| // ... rest of file content
-```
-
-## 🧪 Development
-
-### Running Tests
-
-```bash
-# Run all tests
-pnpm test
-
-# Run tests in watch mode
-pnpm test:watch
-
-# Run tests with coverage
-pnpm test:coverage
-```
-
-### Code Quality
-
-```bash
-# Lint code
-pnpm lint
-
-# Fix linting issues
-pnpm lint:fix
-
-# Format code
-pnpm format
-
-# Check formatting
-pnpm format:check
-
-# Type checking
-pnpm typecheck
-```
-
-### Development Mode
-
-For development with auto-restart:
-
-```bash
-pnpm dev --root /path/to/test/directory
 ```
 
 ## 🏗️ Architecture
@@ -250,9 +169,74 @@ Add to your MCP client configuration:
 {
   "mcpServers": {
     "docfs": {
-      "command": "pnpm",
-      "args": ["start", "--root", "/path/to/your/files"],
-      "cwd": "/path/to/docfs"
+      "command": "npx",
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+## MCP Client Setup
+
+The following examples show how to configure different MCP-compatible clients.
+Each client automatically runs DocFS via `npx -y` with the provided command and
+arguments—no separate server process is needed. The `-y` flag ensures `npx` installs packages without prompting.
+
+### ChatGPT
+
+Add a server entry in ChatGPT's MCP settings pointing to `docfs`:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+### Claude Code
+
+Configure Claude Code to use DocFS:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+### Claude Desktop
+
+Add DocFS to Claude Desktop's MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+### Cursor
+
+Include DocFS in Cursor's MCP config:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
     }
   }
 }
@@ -290,9 +274,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 🐛 [Bug Reports](https://github.com/your-username/docfs/issues)
-- 💡 [Feature Requests](https://github.com/your-username/docfs/issues)
-- 📖 [Documentation](https://github.com/your-username/docfs/wiki)
+- 🐛 [Bug Reports](https://github.com/feli0x/docfs/issues)
+- 💡 [Feature Requests](https://github.com/feli0x/docfs/issues)
+- 📖 [Documentation](https://github.com/feli0x/docfs/wiki)
+
+## Local Development (for contributors)
+
+```bash
+pnpm install
+pnpm build
+pnpm start -- --root /path/to/project
+```
 
 ---
 

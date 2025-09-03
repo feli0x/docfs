@@ -59,7 +59,7 @@ describe('read_files tool', () => {
       isDirectory: false,
       extension: 'md',
     } as any);
-    asMock<typeof mockReadFileContent>(mockReadFileContent).mockImplementationOnce(async () => 'b\nc');
+    asMock<typeof mockReadFileContent>(mockReadFileContent).mockResolvedValueOnce('b\nc');
 
     const output = await readFilesTool.handler(
       { path: 'file.md', startLine: 2, endLine: 3, showLineNumbers: true },
