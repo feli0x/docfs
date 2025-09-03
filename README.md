@@ -15,51 +15,6 @@ DocFS is a Model Context Protocol (MCP) server that provides intelligent access 
 - **⚡ Performance**: Efficient file operations with configurable limits
 - **🎨 Rich Output**: Formatted output with icons, syntax highlighting hints, and summaries
 
-## 📦 Installation
-
-### Prerequisites
-
-- Node.js 18.x or higher
-- pnpm, npm, or yarn
-
-### Install Dependencies
-
-```bash
-pnpm install
-```
-
-### Build the Project
-
-```bash
-pnpm run build
-```
-
-## 🛠️ Usage
-
-### Basic Usage
-
-Run the server with a specific root directory:
-
-```bash
-pnpm start --root /path/to/your/project
-```
-
-### Multiple Root Directories
-
-You can specify multiple root directories:
-
-```bash
-pnpm start --root /path/to/project1 --root /path/to/project2
-```
-
-### Default Behavior
-
-If no `--root` is specified, the current working directory is used:
-
-```bash
-pnpm start
-```
-
 ## 🔧 Available Tools
 
 ### 1. `list_files` - Directory Listing
@@ -158,48 +113,6 @@ Reads content from one or more files with optional line range selection.
  5| // ... rest of file content
 ```
 
-## 🧪 Development
-
-### Running Tests
-
-```bash
-# Run all tests
-pnpm test
-
-# Run tests in watch mode
-pnpm test:watch
-
-# Run tests with coverage
-pnpm test:coverage
-```
-
-### Code Quality
-
-```bash
-# Lint code
-pnpm lint
-
-# Fix linting issues
-pnpm lint:fix
-
-# Format code
-pnpm format
-
-# Check formatting
-pnpm format:check
-
-# Type checking
-pnpm typecheck
-```
-
-### Development Mode
-
-For development with auto-restart:
-
-```bash
-pnpm dev --root /path/to/test/directory
-```
-
 ## 🏗️ Architecture
 
 ### Clean Code Principles
@@ -256,9 +169,74 @@ Add to your MCP client configuration:
 {
   "mcpServers": {
     "docfs": {
-      "command": "pnpm",
-      "args": ["start", "--root", "/path/to/your/files"],
-      "cwd": "/path/to/docfs"
+      "command": "npx",
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+## MCP Client Setup
+
+The following examples show how to configure different MCP-compatible clients.
+Each client automatically runs DocFS via `npx -y` with the provided command and
+arguments—no separate server process is needed. The `-y` flag ensures `npx` installs packages without prompting.
+
+### ChatGPT
+
+Add a server entry in ChatGPT's MCP settings pointing to `docfs`:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+### Claude Code
+
+Configure Claude Code to use DocFS:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+### Claude Desktop
+
+Add DocFS to Claude Desktop's MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
+    }
+  }
+}
+```
+
+### Cursor
+
+Include DocFS in Cursor's MCP config:
+
+```json
+{
+  "mcpServers": {
+    "docfs": {
+      "command": "npx",
+      "args": ["-y", "docfs", "--root", "/path/to/project"]
     }
   }
 }
@@ -299,6 +277,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🐛 [Bug Reports](https://github.com/feli0x/docfs/issues)
 - 💡 [Feature Requests](https://github.com/feli0x/docfs/issues)
 - 📖 [Documentation](https://github.com/feli0x/docfs/wiki)
+
+## Local Development (for contributors)
+
+```bash
+pnpm install
+pnpm build
+pnpm start -- --root /path/to/project
+```
 
 ---
 
