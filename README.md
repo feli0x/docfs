@@ -15,51 +15,6 @@ DocFS is a Model Context Protocol (MCP) server that provides intelligent access 
 - **⚡ Performance**: Efficient file operations with configurable limits
 - **🎨 Rich Output**: Formatted output with icons, syntax highlighting hints, and summaries
 
-## 📦 Installation
-
-### Prerequisites
-
-- Node.js 18.x or higher
-- pnpm, npm, or yarn
-
-### Install Dependencies
-
-```bash
-pnpm install
-```
-
-### Build the Project
-
-```bash
-pnpm run build
-```
-
-## 🛠️ Usage
-
-### Basic Usage
-
-Run the server with a specific root directory:
-
-```bash
-pnpm start --root /path/to/your/project
-```
-
-### Multiple Root Directories
-
-You can specify multiple root directories:
-
-```bash
-pnpm start --root /path/to/project1 --root /path/to/project2
-```
-
-### Default Behavior
-
-If no `--root` is specified, the current working directory is used:
-
-```bash
-pnpm start
-```
-
 ## 🔧 Available Tools
 
 ### 1. `list_files` - Directory Listing
@@ -156,48 +111,6 @@ Reads content from one or more files with optional line range selection.
  3| import { Server } from '@modelcontextprotocol/sdk/server/index.js';
  4| import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
  5| // ... rest of file content
-```
-
-## 🧪 Development
-
-### Running Tests
-
-```bash
-# Run all tests
-pnpm test
-
-# Run tests in watch mode
-pnpm test:watch
-
-# Run tests with coverage
-pnpm test:coverage
-```
-
-### Code Quality
-
-```bash
-# Lint code
-pnpm lint
-
-# Fix linting issues
-pnpm lint:fix
-
-# Format code
-pnpm format
-
-# Check formatting
-pnpm format:check
-
-# Type checking
-pnpm typecheck
-```
-
-### Development Mode
-
-For development with auto-restart:
-
-```bash
-pnpm dev --root /path/to/test/directory
 ```
 
 ## 🏗️ Architecture
