@@ -4,7 +4,13 @@
 
 import { promises as fs } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { validatePathAccess, pathExists, getFileInfo, listFiles } from '../utils/filesystem.js';
+import {
+  validatePathAccess,
+  pathExists,
+  getFileInfo,
+  listFiles,
+  getDirectoryTree,
+} from '../utils/filesystem.js';
 
 // Mock fs module
 jest.mock('node:fs', () => ({
@@ -201,5 +207,56 @@ describe('listFiles', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]?.name).toBe('file1.txt');
+  });
+
+  it('should exclude gitignored files and directories', async () => {
+    mockFs.readFile.mockResolvedValueOnce('dist\n');
+    const mockEntries = ['file1.txt', 'dist'];
+    mockFs.readdir.mockResolvedValueOnce(mockEntries as any);
+
+    const mockFileStats = {
+      size: 100,
+      mtime: new Date('2023-01-01T10:00:00Z'),
+      isDirectory: () => false,
+      isFile: () => true,
+    };
+
+    mockFs.stat.mockResolvedValueOnce(mockFileStats as any);
+
+    const result = await listFiles('/test/path', { recursive: false });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.name).toBe('file1.txt');
+  });
+});
+
+describe('getDirectoryTree', () => {
+  it('should exclude gitignored paths', async () => {
+    mockFs.readFile.mockResolvedValueOnce('dist\n');
+    const dirStats = {
+      size: 0,
+      mtime: new Date('2023-01-01T10:00:00Z'),
+      isDirectory: () => true,
+      isFile: () => false,
+    };
+    const fileStats = {
+      size: 100,
+      mtime: new Date('2023-01-01T10:00:00Z'),
+      isDirectory: () => false,
+      isFile: () => true,
+    };
+
+    mockFs.stat
+      .mockResolvedValueOnce(dirStats as any) // root
+      .mockResolvedValueOnce(dirStats as any) // src
+      .mockResolvedValueOnce(fileStats as any); // file.ts
+
+    mockFs.readdir
+      .mockResolvedValueOnce(['dist', 'src', 'file.ts'] as any) // root entries
+      .mockResolvedValueOnce([] as any); // src entries
+
+    const tree = await getDirectoryTree('/test/path');
+    const names = tree.children?.map((c) => c.name);
+    expect(names).toEqual(['src', 'file.ts']);
   });
 });
