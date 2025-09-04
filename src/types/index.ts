@@ -11,6 +11,10 @@ export interface FileInfo {
   extension?: string | undefined;
 }
 
+export interface DirTreeNode extends FileInfo {
+  children?: DirTreeNode[];
+}
+
 export interface SearchResult {
   file: string;
   line: number;

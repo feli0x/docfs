@@ -9,6 +9,7 @@ import type {
   ListFilesOptions,
   SearchResult,
   SearchFilesOptions,
+  DirTreeNode,
 } from '../types/index.js';
 
 /**
@@ -140,6 +141,44 @@ function matchesPattern(fileName: string, pattern: string): boolean {
     'i',
   );
   return regex.test(fileName);
+}
+
+/**
+ * Builds a nested directory tree structure
+ */
+export async function getDirectoryTree(
+  rootPath: string,
+  options: { maxDepth?: number; includeHidden?: boolean } = {},
+  currentDepth = 0,
+): Promise<DirTreeNode> {
+  const { maxDepth = 10, includeHidden = false } = options;
+  const info = await getFileInfo(rootPath);
+
+  if (!info.isDirectory || currentDepth >= maxDepth) {
+    return info;
+  }
+
+  try {
+    const entries = await fs.readdir(rootPath);
+    const children: DirTreeNode[] = [];
+
+    for (const entry of entries) {
+      if (!includeHidden && entry.startsWith('.')) continue;
+      const fullPath = join(rootPath, entry);
+      const child = await getDirectoryTree(fullPath, options, currentDepth + 1);
+      children.push(child);
+    }
+
+    children.sort((a, b) => {
+      if (a.isDirectory && !b.isDirectory) return -1;
+      if (!a.isDirectory && b.isDirectory) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    return { ...info, children };
+  } catch (error) {
+    throw new Error(`Failed to read directory '${rootPath}': ${(error as Error).message}`);
+  }
 }
 
 /**

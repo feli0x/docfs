@@ -12,7 +12,6 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { fileURLToPath } from 'node:url';
 import { pathExists } from './utils/filesystem.js';
 import { tools } from './tools/index.js';
 import type { ToolContext } from './types/index.js';

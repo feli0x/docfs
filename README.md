@@ -7,6 +7,25 @@ DocFS is a Model Context Protocol (MCP) server that exposes read-only file syste
 - `list_files` – list directories and files
 - `search_files` – search text across files
 - `read_files` – read file contents
+- `dir_tree` – view directory structure as a tree
+
+### dir_tree
+
+The `dir_tree` tool returns a nested representation of files and folders.
+It accepts the following optional parameters:
+
+- `path` – limit traversal to a specific path
+- `maxDepth` – how deep to traverse (default: 10)
+- `includeHidden` – include dotfiles when `true`
+
+Example request:
+
+```json
+{
+  "name": "dir_tree",
+  "arguments": { "path": ".", "maxDepth": 2 }
+}
+```
 
 ## Quick Start
 
