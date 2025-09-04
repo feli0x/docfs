@@ -7,6 +7,7 @@ DocFS is a Model Context Protocol (MCP) server that exposes read-only file syste
 - `list_files` – list directories and files
 - `search_files` – search text across files
 - `read_files` – read file contents
+- `dir_tree` – view directory structure as a tree
 
 ## Quick Start
 
