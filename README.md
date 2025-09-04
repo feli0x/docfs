@@ -1,6 +1,6 @@
 # DocFS
 
-DocFS is a Model Context Protocol (MCP) server that exposes read-only file system tools to MCP clients. Requires Node.js 18 or later.
+DocFS is a Model Context Protocol (MCP) server that exposes read-only file system tools to MCP clients. It supports multiple root directories, filters paths using `.gitignore`, and caches file metadata in an in-memory LRU cache for faster access. Requires Node.js 18 or later.
 
 ## Tools
 
@@ -8,6 +8,15 @@ DocFS is a Model Context Protocol (MCP) server that exposes read-only file syste
 - `list_files` – list directories and files
 - `search_files` – search text across files
 - `read_files` – read file contents
+
+## Differences from a generic filesystem MCP server
+
+DocFS trades the broader read/write capabilities of a standard filesystem server for a narrower, read-only feature set with extra safety and convenience features:
+
+- Read-only operations only
+- Limited to `dir_tree`, `list_files`, `search_files`, and `read_files`
+- Enforces one or more user-specified root directories
+- Applies `.gitignore` rules and caches file metadata using an in-memory LRU cache
 
 ## Quick Start
 

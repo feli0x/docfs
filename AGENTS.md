@@ -1,5 +1,9 @@
 # Repository Guidelines
 
+DocFS is a read-only filesystem MCP server with multiple root support, `.gitignore` filtering, and an
+in-memory LRU cache for file metadata. Compared to a generic filesystem MCP server, it offers only
+inspection tools and strictly validates paths against the configured roots.
+
 ## MCP Tools for Agents
 
 - `list_files`: list files and directories
