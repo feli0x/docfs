@@ -3,7 +3,8 @@
  */
 
 import { promises as fs } from 'node:fs';
-import { join, normalize, resolve, extname, basename, sep } from 'node:path';
+import { join, normalize, resolve, extname, basename, sep, relative } from 'node:path';
+import ignore, { type Ignore } from 'ignore';
 import type {
   FileInfo,
   ListFilesOptions,
@@ -11,6 +12,17 @@ import type {
   SearchFilesOptions,
   DirTreeNode,
 } from '../types/index.js';
+
+async function loadIgnoreMatcher(rootPath: string): Promise<Ignore> {
+  const ig = ignore();
+  try {
+    const content = await fs.readFile(join(rootPath, '.gitignore'), 'utf-8');
+    ig.add(content);
+  } catch {
+    // no .gitignore found
+  }
+  return ig;
+}
 
 /**
  * Validates if a path is within the allowed root directories
@@ -72,7 +84,18 @@ export async function listFiles(
   const { recursive = true, maxDepth = 10, includeHidden = false, pattern } = options;
   const results: FileInfo[] = [];
 
-  await walkDirectory(rootPath, results, 0, maxDepth, recursive, includeHidden, pattern);
+  const matcher = await loadIgnoreMatcher(rootPath);
+  await walkDirectory(
+    rootPath,
+    results,
+    0,
+    maxDepth,
+    recursive,
+    includeHidden,
+    pattern,
+    matcher,
+    rootPath,
+  );
 
   return results.sort((a, b) => {
     if (a.isDirectory && !b.isDirectory) return -1;
@@ -91,7 +114,9 @@ async function walkDirectory(
   maxDepth: number,
   recursive: boolean,
   includeHidden: boolean,
-  pattern?: string,
+  pattern: string | undefined,
+  matcher: Ignore,
+  basePath: string,
 ): Promise<void> {
   if (currentDepth > maxDepth) return;
 
@@ -102,6 +127,9 @@ async function walkDirectory(
       if (!includeHidden && entry.startsWith('.')) continue;
 
       const fullPath = join(dirPath, entry);
+      const relPath = relative(basePath, fullPath);
+      if (matcher.ignores(relPath)) continue;
+
       const fileInfo = await getFileInfo(fullPath);
 
       if (fileInfo.isDirectory) {
@@ -117,6 +145,8 @@ async function walkDirectory(
             recursive,
             includeHidden,
             pattern,
+            matcher,
+            basePath,
           );
         }
         continue;
@@ -150,8 +180,11 @@ export async function getDirectoryTree(
   rootPath: string,
   options: { maxDepth?: number; includeHidden?: boolean } = {},
   currentDepth = 0,
+  matcher?: Ignore,
+  basePath = rootPath,
 ): Promise<DirTreeNode> {
   const { maxDepth = 10, includeHidden = false } = options;
+  const ignoreMatcher = matcher ?? (await loadIgnoreMatcher(basePath));
   const info = await getFileInfo(rootPath);
 
   if (!info.isDirectory || currentDepth >= maxDepth) {
@@ -165,7 +198,15 @@ export async function getDirectoryTree(
     for (const entry of entries) {
       if (!includeHidden && entry.startsWith('.')) continue;
       const fullPath = join(rootPath, entry);
-      const child = await getDirectoryTree(fullPath, options, currentDepth + 1);
+      const relPath = relative(basePath, fullPath);
+      if (ignoreMatcher.ignores(relPath)) continue;
+      const child = await getDirectoryTree(
+        fullPath,
+        options,
+        currentDepth + 1,
+        ignoreMatcher,
+        basePath,
+      );
       children.push(child);
     }
 

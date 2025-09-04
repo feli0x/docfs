@@ -11,6 +11,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.17.5
         version: 1.17.5
+      ignore:
+        specifier: ^7.0.5
+        version: 7.0.5
     devDependencies:
       '@eslint/js':
         specifier: ^9.34.0
