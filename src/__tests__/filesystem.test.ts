@@ -10,6 +10,7 @@ import {
   getFileInfo,
   listFiles,
   getDirectoryTree,
+  clearFileInfoCache,
 } from '../utils/filesystem.js';
 
 // Mock fs module
@@ -23,6 +24,11 @@ jest.mock('node:fs', () => ({
 }));
 
 const mockFs = fs as jest.Mocked<typeof fs>;
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  clearFileInfoCache();
+});
 
 describe('validatePathAccess', () => {
   const allowedRoots = ['/allowed/path1', '/allowed/path2'];
@@ -121,6 +127,22 @@ describe('getFileInfo', () => {
     await expect(getFileInfo('/nonexistent/file')).rejects.toThrow(
       "Failed to get info for '/nonexistent/file': ENOENT",
     );
+  });
+
+  it('should cache file metadata to avoid repeat stat calls', async () => {
+    const mockStats = {
+      size: 256,
+      mtime: new Date('2023-01-01T10:00:00Z'),
+      isDirectory: () => false,
+      isFile: () => true,
+    };
+    mockFs.stat.mockResolvedValueOnce(mockStats as any);
+
+    const first = await getFileInfo('/cached/path.txt');
+    const second = await getFileInfo('/cached/path.txt');
+
+    expect(mockFs.stat).toHaveBeenCalledTimes(1);
+    expect(second).toEqual(first);
   });
 });
 
@@ -256,7 +278,7 @@ describe('getDirectoryTree', () => {
       .mockResolvedValueOnce([] as any); // src entries
 
     const tree = await getDirectoryTree('/test/path');
-    const names = tree.children?.map((c) => c.name);
+    const names = tree.children?.map(c => c.name);
     expect(names).toEqual(['src', 'file.ts']);
   });
 });
