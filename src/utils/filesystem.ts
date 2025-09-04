@@ -4,7 +4,8 @@
 
 import { promises as fs } from 'node:fs';
 import { join, normalize, resolve, extname, basename, sep, relative } from 'node:path';
-import ignore, { type Ignore } from 'ignore';
+import ignore from 'ignore';
+import type { Ignore } from 'ignore';
 import type {
   FileInfo,
   ListFilesOptions,
