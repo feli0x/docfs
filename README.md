@@ -11,12 +11,6 @@ DocFS is a Model Context Protocol (MCP) server that exposes read-only file syste
 
 ## Quick Start
 
-Run DocFS on demand with `npx`:
-
-```bash
-npx -y docfs --root /path/to/project
-```
-
 Add the server to any MCP-compatible client by including this JSON in its configuration:
 
 ```json
@@ -43,7 +37,12 @@ pnpm test
 pnpm build
 ```
 
+Run DocFS on demand with `npx`:
+
+```bash
+npx -y docfs --root /path/to/project
+```
+
 ## License
 
 MIT
-
