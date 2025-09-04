@@ -39,137 +39,18 @@ function parseInput(input: unknown): SearchFilesInput {
   };
 }
 
-/**
- * Groups search results by file for better organization
- */
-function groupResultsByFile(results: SearchResult[]): Map<string, SearchResult[]> {
-  const grouped = new Map<string, SearchResult[]>();
-
-  for (const result of results) {
-    if (!grouped.has(result.file)) {
-      grouped.set(result.file, []);
+function makeRelative(filePath: string, roots: string[]): string {
+  for (const root of roots) {
+    if (filePath.startsWith(root)) {
+      return relative(root, filePath);
     }
-    grouped.get(result.file)!.push(result);
   }
-
-  return grouped;
+  return filePath;
 }
 
-/**
- * Formats search results for display
- */
-function formatSearchResults(results: SearchResult[], rootPaths: string[], query: string): string {
-  if (results.length === 0) {
-    return `🔍 No matches found for "${query}"`;
-  }
-
-  const lines: string[] = [];
-  const groupedResults = groupResultsByFile(results);
-
-  lines.push(
-    `🔍 Found ${results.length} matches for "${query}" in ${groupedResults.size} files:\n`,
-  );
-
-  for (const [filePath, fileResults] of groupedResults) {
-    // Find the appropriate root path for relative display
-    let relativePath = filePath;
-    for (const root of rootPaths) {
-      if (filePath.startsWith(root)) {
-        relativePath = relative(root, filePath);
-        break;
-      }
-    }
-
-    lines.push(`📄 ${relativePath} (${fileResults.length} matches)`);
-
-    for (const result of fileResults.slice(0, 5)) {
-      // Limit matches per file for readability
-      lines.push(`   Line ${result.line}: ${result.content.trim()}`);
-
-      // Add context if available
-      if (result.context && (result.context.before.length > 0 || result.context.after.length > 0)) {
-        // Show context with line numbers
-        const contextStart = result.line - result.context.before.length;
-
-        for (let i = 0; i < result.context.before.length; i++) {
-          const lineNum = contextStart + i;
-          lines.push(`   ${lineNum}:   ${result.context.before[i]?.trim()}`);
-        }
-
-        lines.push(`   ${result.line}: > ${result.content.trim()}`); // Highlight the match
-
-        for (let i = 0; i < result.context.after.length; i++) {
-          const lineNum = result.line + 1 + i;
-          lines.push(`   ${lineNum}:   ${result.context.after[i]?.trim()}`);
-        }
-      }
-
-      lines.push(''); // Empty line between matches
-    }
-
-    if (fileResults.length > 5) {
-      lines.push(`   ... and ${fileResults.length - 5} more matches\n`);
-    }
-  }
-
-  return lines.join('\n');
-}
-
-/**
- * Creates a summary of search results
- */
-function createSearchSummary(
-  results: SearchResult[],
-  rootPaths: string[],
-  query: string,
-  params: SearchFilesInput,
-): string {
-  const groupedResults = groupResultsByFile(results);
-  const fileTypes = new Map<string, number>();
-
-  // Analyze file types in results
-  for (const filePath of groupedResults.keys()) {
-    const lastDot = filePath.lastIndexOf('.');
-    if (lastDot > 0) {
-      const ext = filePath.substring(lastDot + 1).toLowerCase();
-      fileTypes.set(ext, (fileTypes.get(ext) || 0) + 1);
-    }
-  }
-
-  const lines = [
-    '\n📊 Search Summary:',
-    `   Query: "${query}"`,
-    `   Case sensitive: ${params.caseSensitive ? 'Yes' : 'No'}`,
-    `   Whole word: ${params.wholeWord ? 'Yes' : 'No'}`,
-    `   Total matches: ${results.length}`,
-    `   Files with matches: ${groupedResults.size}`,
-    `   Searched in: ${rootPaths.length} root director${rootPaths.length === 1 ? 'y' : 'ies'}`,
-  ];
-
-  if (params.filePattern) {
-    lines.push(`   File pattern: ${params.filePattern}`);
-  }
-
-  if (fileTypes.size > 0) {
-    lines.push('   File types with matches:');
-    const sortedTypes = Array.from(fileTypes.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-
-    for (const [ext, count] of sortedTypes) {
-      lines.push(`     .${ext}: ${count} files`);
-    }
-  }
-
-  return lines.join('\n');
-}
-
-/**
- * Search Files Tool Implementation
- */
 export const searchFiles: ToolSpec = {
   name: 'search_files',
-  description: 'Searches for text content within files in the configured root directories',
+  description: 'Searches for text content within files and returns JSON data',
   inputSchema: {
     type: 'object',
     required: ['query'],
@@ -217,7 +98,6 @@ export const searchFiles: ToolSpec = {
 
   async handler(input: unknown, context: ToolContext): Promise<ToolResult> {
     const params = parseInput(input);
-    const results: string[] = [];
 
     try {
       const searchResults = await searchInFiles(context.roots, {
@@ -229,33 +109,38 @@ export const searchFiles: ToolSpec = {
         maxDepth: params.maxDepth,
       });
 
-      // Limit results to maxResults
       const limitedResults = searchResults.slice(0, params.maxResults);
+      const mappedResults = limitedResults.map((r: SearchResult) => ({
+        file: makeRelative(r.file, context.roots),
+        line: r.line,
+        content: r.content,
+        context: r.context,
+      }));
 
-      // Format results for display
-      const formattedResults = formatSearchResults(limitedResults, context.roots, params.query);
-      const summary = createSearchSummary(limitedResults, context.roots, params.query, params);
+      const output = {
+        results: mappedResults,
+        totalMatches: searchResults.length,
+      };
 
-      results.push(formattedResults);
-      results.push(summary);
-
-      if (params.maxResults && searchResults.length > params.maxResults) {
-        results.push(
-          `\n⚠️  Results limited to ${params.maxResults} matches (${searchResults.length} total found)`,
-        );
-      }
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(output),
+          },
+        ],
+      };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      results.push(`❌ Search failed: ${errorMessage}`);
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: message }),
+          },
+        ],
+        isError: true,
+      };
     }
-
-    return {
-      content: [
-        {
-          type: 'text',
-          text: results.join('\n'),
-        },
-      ],
-    };
   },
 };
