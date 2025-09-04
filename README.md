@@ -22,6 +22,8 @@ DocFS trades the broader read/write capabilities of a standard filesystem server
 
 Add the server to any MCP-compatible client by including this JSON in its configuration:
 
+JSON:
+
 ```json
 {
   "mcpServers": {
@@ -31,6 +33,21 @@ Add the server to any MCP-compatible client by including this JSON in its config
     }
   }
 }
+```
+
+Claude Code:
+
+```zsh
+claude mcp add docfs -- npx -y docfs --root /path/to/project
+
+```
+
+Codex CLI:
+
+```toml
+[mcp_servers.docfs]
+command = "npx"
+args = ["-y", "docfs", "--root", "/path/to/project"]
 ```
 
 Replace `/path/to/project` with the directory you want to expose. Repeat `--root` to allow multiple directories.
