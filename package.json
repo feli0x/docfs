@@ -1,6 +1,6 @@
 {
   "name": "docfs",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "description": "MCP server for accessing local file system content with intelligent search and listing tools",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,7 @@
     "node": ">=18"
   },
   "bin": {
-    "docfs": "dist/index.js"
+    "docfs": "dist/cli.js"
   },
   "files": [
     "dist/",

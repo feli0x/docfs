@@ -22,7 +22,7 @@ describe('list_files tool', () => {
     jest.clearAllMocks();
   });
 
-  it('renders tree and summary for provided files', async () => {
+  it('returns structured data for provided files', async () => {
     asMock<typeof mockListDirectoryFiles>(mockListDirectoryFiles).mockResolvedValueOnce([
       {
         path: '/root',
@@ -58,13 +58,12 @@ describe('list_files tool', () => {
 
     const output = await listFilesTool.handler({}, context);
     const text = output.content[0]?.type === 'text' ? output.content[0].text : '';
+    const data = JSON.parse(text);
 
-    expect(text).toContain('📁 /root');
-    expect(text).toContain('index.ts');
-    expect(text).toContain('README.md');
-    expect(text).toContain('📊 Summary for /root:');
-    expect(text).toMatch(/Files:\s*2/);
-    expect(text).toMatch(/Directories:\s*2/);
+    expect(Array.isArray(data)).toBe(true);
+    expect(data[0]?.root).toBe('/root');
+    const names = data[0]?.files.map((f: any) => f.name);
+    expect(names).toEqual(expect.arrayContaining(['index.ts', 'README.md']));
   });
 
   it('accepts a relative path within a root', async () => {
@@ -80,6 +79,7 @@ describe('list_files tool', () => {
 
     const output = await listFilesTool.handler({ path: 'sub' }, context);
     const text = output.content[0]?.type === 'text' ? output.content[0].text : '';
-    expect(text).toContain('📁 /root/sub');
+    const data = JSON.parse(text);
+    expect(data[0]?.root).toBe('/root/sub');
   });
 });

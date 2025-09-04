@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * DocFS MCP Server - Main entry point
  * Provides filesystem access tools for MCP clients
@@ -19,7 +17,7 @@ import { pathExists } from './utils/filesystem.js';
 import { tools } from './tools/index.js';
 import type { ToolContext } from './types/index.js';
 
-interface ServerConfig {
+export interface ServerConfig {
   name: string;
   version: string;
   roots: string[];
@@ -79,7 +77,7 @@ async function validateRoots(roots: string[]): Promise<string[]> {
 /**
  * Creates and configures the MCP server
  */
-function createServer(config: ServerConfig): Server {
+export function createServer(config: ServerConfig): Server {
   const server = new Server(
     {
       name: config.name,
@@ -193,27 +191,4 @@ async function main(): Promise<void> {
   }
 }
 
-// Start the server if this module is the main module
-const isMain: boolean = (() : boolean => {
-  try {
-    // Prefer Node 20+'s import.meta.main when available (Node 20+)
-    const meta = import.meta as unknown as { main?: boolean };
-    if (typeof meta.main === 'boolean') {
-      return meta.main;
-    }
-  } catch {
-    // fall through to path-based check
-  }
-  // Fallback: normalize both paths to avoid npx/global wrapper differences
-  const argv1 = process.argv[1] ? resolve(process.argv[1]) : null;
-  const modulePath = resolve(fileURLToPath(import.meta.url));
-  return argv1 !== null && argv1 === modulePath;
-})();
-
-if (isMain) {
-  main().catch((error: unknown) => {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[FATAL] Unexpected error: ${errorMessage}`);
-    process.exit(1);
-  });
-}
+export { main };

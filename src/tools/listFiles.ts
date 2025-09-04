@@ -1,8 +1,8 @@
 /**
- * List Files Tool - Creates a tree view of configured directories
+ * List Files Tool - Returns a structured list of files and directories
  */
 
-import { relative, isAbsolute, resolve, normalize } from 'node:path';
+import { isAbsolute, resolve, normalize } from 'node:path';
 import {
   listFiles as listDirectoryFiles,
   validatePathAccess,
@@ -32,142 +32,10 @@ function parseInput(input: unknown): ListFilesInput {
   };
 }
 
-/**
- * Creates a tree-like text representation of files
- */
-function createTreeView(files: FileInfo[], rootPath: string): string {
-  const lines: string[] = [];
-  const pathMap = new Map<string, FileInfo[]>();
-
-  // Group files by directory
-  for (const file of files) {
-    const dir = file.isDirectory ? file.path : file.path.substring(0, file.path.lastIndexOf('/'));
-    if (!pathMap.has(dir)) {
-      pathMap.set(dir, []);
-    }
-    pathMap.get(dir)!.push(file);
-  }
-
-  // Create tree structure
-  lines.push(`📁 ${rootPath}`);
-
-  const sortedFiles = files
-    .filter(f => f.path !== rootPath)
-    .sort((a, b) => {
-      if (a.isDirectory && !b.isDirectory) return -1;
-      if (!a.isDirectory && b.isDirectory) return 1;
-      return a.path.localeCompare(b.path);
-    });
-
-  for (let i = 0; i < sortedFiles.length; i++) {
-    const file = sortedFiles[i]!;
-    const relativePath = relative(rootPath, file.path);
-    const depth = relativePath.split('/').length - 1;
-    const isLast = i === sortedFiles.length - 1;
-
-    const prefix = '  '.repeat(depth) + (isLast ? '└── ' : '├── ');
-    const icon = file.isDirectory ? '📁' : getFileIcon(file.extension);
-    const size = file.isDirectory ? '' : ` (${formatFileSize(file.size)})`;
-
-    lines.push(`${prefix}${icon} ${file.name}${size}`);
-  }
-
-  return lines.join('\n');
-}
-
-/**
- * Gets an appropriate icon for file type
- */
-function getFileIcon(extension?: string): string {
-  if (!extension) return '📄';
-
-  const iconMap: Record<string, string> = {
-    js: '🟨',
-    ts: '🔷',
-    py: '🐍',
-    java: '☕',
-    cpp: '⚙️',
-    c: '⚙️',
-    html: '🌐',
-    css: '🎨',
-    json: '📋',
-    xml: '📋',
-    md: '📝',
-    txt: '📄',
-    pdf: '📕',
-    jpg: '🖼️',
-    png: '🖼️',
-    gif: '🖼️',
-    mp4: '🎬',
-    mp3: '🎵',
-    zip: '📦',
-    tar: '📦',
-    gz: '📦',
-  };
-
-  return iconMap[extension.toLowerCase()] || '📄';
-}
-
-/**
- * Formats file size in human-readable format
- */
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
-
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const k = 1024;
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${units[i]}`;
-}
-
-/**
- * Creates summary information about the listed files
- */
-function createSummary(files: FileInfo[], rootPath: string): string {
-  const stats = {
-    totalFiles: files.filter(f => !f.isDirectory).length,
-    totalDirectories: files.filter(f => f.isDirectory).length,
-    totalSize: files.filter(f => !f.isDirectory).reduce((sum, f) => sum + f.size, 0),
-    fileTypes: new Map<string, number>(),
-  };
-
-  // Count file types
-  for (const file of files) {
-    if (!file.isDirectory && file.extension) {
-      const ext = file.extension.toLowerCase();
-      stats.fileTypes.set(ext, (stats.fileTypes.get(ext) || 0) + 1);
-    }
-  }
-
-  const lines = [
-    `\n📊 Summary for ${rootPath}:`,
-    `   Files: ${stats.totalFiles}`,
-    `   Directories: ${stats.totalDirectories}`,
-    `   Total size: ${formatFileSize(stats.totalSize)}`,
-  ];
-
-  if (stats.fileTypes.size > 0) {
-    lines.push('   File types:');
-    const sortedTypes = Array.from(stats.fileTypes.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5); // Show top 5 file types
-
-    for (const [ext, count] of sortedTypes) {
-      lines.push(`     .${ext}: ${count}`);
-    }
-  }
-
-  return lines.join('\n');
-}
-
-/**
- * List Files Tool Implementation
- */
 export const listFiles: ToolSpec = {
   name: 'list_files',
   description:
-    'Lists files and directories in the configured root directories with optional filtering and tree visualization',
+    'Lists files and directories in the configured root directories and returns JSON data',
   inputSchema: {
     type: 'object',
     properties: {
@@ -200,7 +68,7 @@ export const listFiles: ToolSpec = {
 
   async handler(input: unknown, context: ToolContext): Promise<ToolResult> {
     const params = parseInput(input);
-    const results: string[] = [];
+    const results: Array<{ root: string; files?: FileInfo[]; error?: string }> = [];
 
     // Determine which paths to list
     let pathsToList: string[];
@@ -243,20 +111,10 @@ export const listFiles: ToolSpec = {
           maxDepth: params.maxDepth,
           includeHidden: params.includeHidden,
         });
-
-        // Create tree view
-        const treeView = createTreeView(files, rootPath);
-        const summary = createSummary(files, rootPath);
-
-        results.push(treeView);
-        results.push(summary);
-
-        if (pathsToList.length > 1) {
-          results.push('\n' + '─'.repeat(80) + '\n'); // Separator between roots
-        }
+        results.push({ root: rootPath, files });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        results.push(`❌ Error listing files in ${rootPath}: ${errorMessage}`);
+        const message = error instanceof Error ? error.message : String(error);
+        results.push({ root: rootPath, error: message });
       }
     }
 
@@ -264,7 +122,7 @@ export const listFiles: ToolSpec = {
       content: [
         {
           type: 'text',
-          text: results.join('\n'),
+          text: JSON.stringify(results),
         },
       ],
     };

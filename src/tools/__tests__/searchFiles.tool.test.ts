@@ -21,7 +21,7 @@ describe('search_files tool', () => {
     jest.clearAllMocks();
   });
 
-  it('formats grouped results with context and summary', async () => {
+  it('returns structured results with total count', async () => {
     const results: SearchResult[] = [
       {
         file: '/project/src/app.ts',
@@ -50,22 +50,12 @@ describe('search_files tool', () => {
       context,
     );
     const text = output.content[0]?.type === 'text' ? output.content[0].text : '';
+    const data = JSON.parse(text);
 
-    // Group header and per-file summaries
-    expect(text).toContain('🔍 Found');
-    expect(text).toContain('📄 src/app.ts (');
-    expect(text).toContain('📄 README.md (');
-
-    // Context lines formatting
-    expect(text).toContain('Line 10:');
-    expect(text).toContain(': > const server = new Server()');
-
-    // Summary section
-    expect(text).toContain('📊 Search Summary:');
-    expect(text).toContain('Query: "server"');
-    expect(text).toContain('File pattern: *.ts');
-
-    // Results limited notice
-    expect(text).toContain('Results limited to 2 matches');
+    expect(data.totalMatches).toBe(3);
+    expect(data.results).toHaveLength(2);
+    expect(data.results[0].file).toBe('src/app.ts');
+    expect(data.results[0].context.before).toEqual(['// pre']);
+    expect(data.results[1].file).toBe('README.md');
   });
 });

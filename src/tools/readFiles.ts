@@ -79,74 +79,10 @@ function isValidEncoding(encoding: unknown): encoding is BufferEncoding {
  * Adds line numbers to content
  */
 function addLineNumbers(content: string, startLine: number = 1): string {
-  const lines = content.split('\n');
-  const maxLineNumWidth = String(startLine + lines.length - 1).length;
-
-  return lines
-    .map((line, index) => {
-      const lineNum = (startLine + index).toString().padStart(maxLineNumWidth, ' ');
-      return `${lineNum}| ${line}`;
-    })
+  return content
+    .split('\n')
+    .map((line, index) => `${startLine + index}| ${line}`)
     .join('\n');
-}
-
-/**
- * Formats file size in human-readable format
- */
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
-
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const k = 1024;
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${units[i]}`;
-}
-
-/**
- * Detects likely content type based on file extension
- */
-function getContentType(filePath: string): string {
-  const ext = filePath.substring(filePath.lastIndexOf('.') + 1).toLowerCase();
-
-  const typeMap: Record<string, string> = {
-    js: 'javascript',
-    ts: 'typescript',
-    jsx: 'javascript',
-    tsx: 'typescript',
-    py: 'python',
-    java: 'java',
-    cpp: 'cpp',
-    c: 'c',
-    cs: 'csharp',
-    php: 'php',
-    rb: 'ruby',
-    go: 'go',
-    rs: 'rust',
-    swift: 'swift',
-    kt: 'kotlin',
-    scala: 'scala',
-    html: 'html',
-    liquid: 'liquid',
-    css: 'css',
-    scss: 'scss',
-    sass: 'sass',
-    less: 'less',
-    xml: 'xml',
-    json: 'json',
-    yaml: 'yaml',
-    yml: 'yaml',
-    md: 'markdown',
-    sql: 'sql',
-    sh: 'bash',
-    bash: 'bash',
-    zsh: 'zsh',
-    fish: 'fish',
-    ps1: 'powershell',
-    dockerfile: 'dockerfile',
-  };
-
-  return typeMap[ext] || 'text';
 }
 
 /**
@@ -165,7 +101,6 @@ async function resolveFilePath(filePath: string, rootPaths: string[]): Promise<s
         return withinRoot;
       }
     } catch {
-      // Not within this root or does not exist; try next
       continue;
     }
   }
@@ -177,30 +112,25 @@ async function resolveFilePath(filePath: string, rootPaths: string[]): Promise<s
 }
 
 /**
- * Reads and formats a single file
+ * Reads a single file and returns its content
  */
 async function readSingleFile(
   filePath: string,
   params: ReadFilesInput,
   rootPaths: string[],
-): Promise<string> {
+): Promise<{ path: string; content: string }> {
   const validatedPath = await resolveFilePath(filePath, rootPaths);
 
-  // Get file info first
   const fileInfo = await getFileInfo(validatedPath);
 
   if (fileInfo.isDirectory) {
     throw new Error(`Cannot read directory: ${filePath}`);
   }
 
-  // Check file size limit
   if (fileInfo.size > params.maxFileSize!) {
-    throw new Error(
-      `File too large: ${formatFileSize(fileInfo.size)} (max: ${formatFileSize(params.maxFileSize!)})`,
-    );
+    throw new Error(`File too large: ${fileInfo.size} bytes (max: ${params.maxFileSize!} bytes)`);
   }
 
-  // Read file content
   const content = await readFileContent(
     validatedPath,
     params.startLine,
@@ -208,7 +138,10 @@ async function readSingleFile(
     params.encoding,
   );
 
-  // Format relative path for display
+  const formattedContent = params.showLineNumbers
+    ? addLineNumbers(content, params.startLine || 1)
+    : content;
+
   let relativePath = filePath;
   for (const root of rootPaths) {
     if (validatedPath.startsWith(root)) {
@@ -217,37 +150,12 @@ async function readSingleFile(
     }
   }
 
-  // Create file header
-  const contentType = getContentType(filePath);
-  const rangeInfo =
-    params.startLine || params.endLine
-      ? ` (lines ${params.startLine || 1}-${params.endLine || 'end'})`
-      : '';
-
-  const header = [
-    `📄 ${relativePath}${rangeInfo}`,
-    `   Size: ${formatFileSize(fileInfo.size)}`,
-    `   Modified: ${new Date(fileInfo.modified).toLocaleString()}`,
-    `   Type: ${contentType}`,
-    `   Encoding: ${params.encoding}`,
-    '─'.repeat(80),
-  ].join('\n');
-
-  // Format content with optional line numbers
-  const formattedContent = params.showLineNumbers
-    ? addLineNumbers(content, params.startLine || 1)
-    : content;
-
-  return `${header}\n${formattedContent}\n`;
+  return { path: relativePath, content: formattedContent };
 }
 
-/**
- * Read Files Tool Implementation
- */
 export const readFiles: ToolSpec = {
   name: 'read_files',
-  description:
-    'Reads content from one or more files with optional line range selection and formatting options',
+  description: 'Reads content from one or more files and returns JSON data',
   inputSchema: {
     type: 'object',
     properties: {
@@ -310,42 +218,27 @@ export const readFiles: ToolSpec = {
 
   async handler(input: unknown, context: ToolContext): Promise<ToolResult> {
     const params = parseInput(input);
-    const results: string[] = [];
-    let successCount = 0;
-    let errorCount = 0;
+    const results: Array<{ path: string; content?: string; error?: string }> = [];
 
-    // Validate line range
     if (params.startLine && params.endLine && params.startLine > params.endLine) {
       throw new Error('Start line cannot be greater than end line');
     }
 
     for (const filePath of params.paths) {
       try {
-        const fileContent = await readSingleFile(filePath, params, context.roots);
-        results.push(fileContent);
-        successCount++;
-
-        // Add separator between files if reading multiple files
-        if (params.paths.length > 1 && successCount < params.paths.length) {
-          results.push('\n' + '═'.repeat(80) + '\n');
-        }
+        const file = await readSingleFile(filePath, params, context.roots);
+        results.push(file);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        results.push(`❌ Failed to read ${filePath}: ${errorMessage}\n`);
-        errorCount++;
+        const message = error instanceof Error ? error.message : String(error);
+        results.push({ path: filePath, error: message });
       }
-    }
-
-    // Add summary if multiple files were processed
-    if (params.paths.length > 1) {
-      results.push(`\n📊 Summary: ${successCount} files read successfully, ${errorCount} errors`);
     }
 
     return {
       content: [
         {
           type: 'text',
-          text: results.join('\n'),
+          text: JSON.stringify(results),
         },
       ],
     };
