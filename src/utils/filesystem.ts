@@ -6,6 +6,7 @@ import { promises as fs } from 'node:fs';
 import { join, normalize, resolve, extname, basename, sep, relative } from 'node:path';
 import ignore from 'ignore';
 import type { Ignore } from 'ignore';
+import { LRUCache } from './cache.js';
 import type {
   FileInfo,
   ListFilesOptions,
@@ -13,6 +14,10 @@ import type {
   SearchFilesOptions,
   DirTreeNode,
 } from '../types/index.js';
+
+const metadataCacheSize = Number(process.env.DOCFS_METADATA_CACHE_SIZE ?? '1000');
+const metadataCacheTtl = Number(process.env.DOCFS_METADATA_CACHE_TTL ?? '30000');
+const metadataCache = new LRUCache<FileInfo>(metadataCacheSize, metadataCacheTtl);
 
 async function loadIgnoreMatcher(rootPath: string): Promise<Ignore> {
   const ig = ignore();
@@ -57,12 +62,17 @@ export async function pathExists(path: string): Promise<boolean> {
  * Gets file information with error handling
  */
 export async function getFileInfo(path: string): Promise<FileInfo> {
+  const cached = metadataCache.get(path);
+  if (cached) {
+    return cached;
+  }
+
   try {
     const stats = await fs.stat(path);
     const fileName = basename(path);
     const fileExt = stats.isFile() ? extname(path).slice(1) : undefined;
 
-    return {
+    const info: FileInfo = {
       path,
       name: fileName,
       size: stats.size,
@@ -70,9 +80,16 @@ export async function getFileInfo(path: string): Promise<FileInfo> {
       isDirectory: stats.isDirectory(),
       extension: fileExt,
     };
+
+    metadataCache.set(path, info);
+    return info;
   } catch (error) {
     throw new Error(`Failed to get info for '${path}': ${(error as Error).message}`);
   }
+}
+
+export function clearFileInfoCache(): void {
+  metadataCache.clear();
 }
 
 /**
