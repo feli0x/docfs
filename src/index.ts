@@ -77,6 +77,8 @@ async function validateRoots(roots: string[]): Promise<string[]> {
  * Creates and configures the MCP server
  */
 export function createServer(config: ServerConfig): Server {
+  let dirTreeRan = false;
+
   const server = new Server(
     {
       name: config.name,
@@ -85,7 +87,12 @@ export function createServer(config: ServerConfig): Server {
     {
       capabilities: {
         tools: {},
+        experimental: {
+          requiredCommands: ['dir_tree'],
+        },
       },
+      instructions:
+        "Run 'dir_tree' on the configured root directories before using other tools.",
     },
   );
 
@@ -104,6 +111,10 @@ export function createServer(config: ServerConfig): Server {
   server.setRequestHandler(CallToolRequestSchema, async request => {
     const { name, arguments: args } = request.params;
 
+    if (name !== 'dir_tree' && !dirTreeRan) {
+      throw new Error("Please run 'dir_tree' on the configured root directories before using other tools.");
+    }
+
     // Find the requested tool
     const tool = tools.find(t => t.name === name);
     if (!tool) {
@@ -118,6 +129,9 @@ export function createServer(config: ServerConfig): Server {
     try {
       // Execute the tool
       const result = await tool.handler(args ?? {}, context);
+      if (name === 'dir_tree') {
+        dirTreeRan = true;
+      }
       return result as CallToolResult;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
