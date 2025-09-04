@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/feli0x-docfs-badge.png)](https://mseep.ai/app/feli0x-docfs)
+
 # DocFS
 
 DocFS is a Model Context Protocol (MCP) server that exposes read-only file system tools to MCP clients. Requires Node.js 18 or later.
